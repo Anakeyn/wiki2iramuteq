@@ -1,127 +1,214 @@
 # wiki2iramuteq
 
-Constitue un corpus au format [IRaMuTeQ](https://pratinaud.gitpages.huma-num.fr/iramuteq-website/) à partir d'une catégorie Wikipédia et de ses sous-catégories, dans n'importe quelle langue (testé pour le français et le breton).
+Constitue des corpus au format [IRaMuTeQ](https://pratinaud.gitpages.huma-num.fr/iramuteq-website/) à partir de Wikipédia, dans n'importe quelle langue. L'outil a été testé pour le français et le breton.
 
-## Ce que fait le script
+Un corpus peut partir :
+- d'une **catégorie** Wikipédia et de ses sous-catégories ;
+- de **termes de recherche** ;
+- des **articles d'un autre corpus**, dans une autre langue, pour comparer deux Wikipédia.
 
-1. Parcourt une catégorie Wikipédia et ses sous-catégories jusqu'à la profondeur choisie, via l'API MediaWiki.
-2. Récupère le texte brut de chaque article (extension TextExtracts) : pas d'infobox, de tableaux ni de références.
-3. Supprime les sections annexes (Notes et références, Voir aussi, Liens externes, Bibliographie…, et leurs équivalents bretons).
-4. Écrit un fichier `.txt` UTF-8 au format IRaMuTeQ, un texte par article :
+Le dépôt contient aussi des **corpus prêts à l'emploi** sur les humanités numériques et sur le numérique, dans les Wikipédia française et bretonne.
+
+## Sommaire
+
+1. [Corpus prêts à l'emploi](#1-corpus-prêts-à-lemploi--aucune-commande-nécessaire)
+2. [Créer ses propres corpus](#2-créer-ses-propres-corpus)
+3. [Refiltrer un corpus](#3-refiltrer-un-corpus--filtrer_corpuspy)
+4. [Reproduire les corpus du dépôt](#4-reproduire-les-corpus-du-dépôt)
+5. [Options](#5-options)
+6. [Licences et citation](#6-licences-et-citation)
+
+## 1. Corpus prêts à l'emploi : aucune commande nécessaire
+
+Ces corpus ont été extraits le 20 octobre 2026. Ils sont prêts à ouvrir dans IRaMuTeQ :
+
+| Corpus | Fichier à ouvrir dans IRaMuTeQ | Articles |
+|---|---|---|
+| Humanités numériques (fr) | `corpus/hn_fr/wikipedia_fr_humanites_numeriques.txt` | 45 |
+| Le numérique (fr) | `corpus/num_fr/wikipedia_fr_numerique_filtre.txt` | 1 232 |
+| Le numérique (br) | `corpus/num_br/wikipedia_br_numerique_filtre.txt` | 156 |
+| Paires fr/br, version française | `corpus/num_fr_aligne/wikipedia_fr_aligne_sur_br_numerique_filtre.txt` | 135 |
+| Paires fr/br, version bretonne | `corpus/num_fr_aligne/wikipedia_br_numerique_filtre_aligne_sur_fr.txt` | 135 |
+
+**Pour récupérer un corpus :** sur GitHub, cliquez sur le fichier, puis sur le bouton de téléchargement (*Download raw file*). Vous pouvez aussi récupérer tout le dépôt avec le bouton vert **Code → Download ZIP**.
+
+**Pour l'ouvrir dans IRaMuTeQ :** *Fichier → Ouvrir un corpus*, encodage **utf-8**, langue **français**. IRaMuTeQ s'installe sur Windows, macOS et Linux ; voir la [page d'installation](https://pratinaud.gitpages.huma-num.fr/iramuteq-website/).
+
+**Corpus bretons :** IRaMuTeQ ne propose pas encore de dictionnaire breton. En attendant, ouvrez-les avec la langue « français » et décochez la lemmatisation dans les paramètres de chaque analyse : les analyses portent alors sur les formes du texte.
+
+Le fichier [`corpus/LISEZMOI.md`](corpus/LISEZMOI.md) décrit pour chaque corpus la méthode de constitution, les variables étoilées, les seuils et les choix manuels. Les fichiers `*_criteres.txt` en gardent la trace.
+
+## 2. Créer ses propres corpus
+
+### Prérequis
+
+Il faut Python 3.8 ou plus récent, sans aucune bibliothèque à installer.
+
+- **Linux, macOS** : Python est déjà présent ; les commandes s'utilisent telles quelles.
+- **Windows** : installez Python depuis [python.org](https://www.python.org/downloads/) en cochant *Add Python to PATH*. Dans les commandes, remplacez `python3` par `python`, et écrivez chaque commande **sur une seule ligne**, car le `\` de fin de ligne ne fonctionne pas dans la console Windows.
+
+Téléchargez le dépôt (**Code → Download ZIP**), décompressez-le, puis ouvrez un terminal dans ce dossier.
+
+### Ce que fait `wiki2iramuteq.py`
+
+1. Il sélectionne les articles selon le mode choisi : catégorie, recherche, articles parallèles ou alignement.
+2. Il récupère le texte brut de chaque article via l'API officielle de Wikipédia, sans infobox, tableaux ni références.
+3. Il supprime les sections annexes (Notes et références, Voir aussi, Liens externes, Bibliographie…), en français et en breton.
+4. Il écrit un fichier `.txt` UTF-8 au format IRaMuTeQ, un texte par article, avec ses variables étoilées :
    ```
-   **** *art_Edition_numerique *cat_Humanites_numeriques *prof_0 *lang_fr
+   **** *art_Logiciel_libre *id_Logiciel_libre *cat_recherche *prof_0 *terme_logiciel_libre *equiv_br_oui *lang_fr
    Texte de l'article…
    ```
-5. Écrit un fichier CSV de métadonnées (titre, URL, catégorie, profondeur, révision, nombre de mots, retenu ou non).
+5. Il écrit un fichier CSV de métadonnées : titre, URL, révision, nombre de mots, occurrences des termes, article retenu ou non.
 
-## Prérequis
+**Merci d'indiquer `--contact`** (votre courriel ou site web) : Wikimédia demande que les outils s'identifient. Le script espace ses requêtes et ralentit de lui-même si le serveur le demande (erreur HTTP 429). Comptez quelques minutes pour quelques centaines d'articles.
 
-Python 3.8 ou plus récent, sans aucune bibliothèque externe.
+### Mode « catégorie »
 
-## Utilisation
-
-```bash
-# Corpus français
-python3 wiki2iramuteq.py --lang fr --categorie "Humanités numériques" \
-    --profondeur 2 --sortie ~/Documents/FouillesdeTextes/iramuteq/hn_fr
-
-# Corpus breton : la catégorie équivalente est trouvée par les liens interlangues
-python3 wiki2iramuteq.py --lang br --depuis fr --categorie "Humanités numériques" \
-    --profondeur 2 --sortie ~/Documents/FouillesdeTextes/iramuteq/hn_br
-```
-
-### Mode « articles parallèles »
-
-Quand la Wikipédia cible n'a pas de catégorie équivalente (c'est le cas en breton pour « Humanités numériques »), le script parcourt la catégorie dans une autre langue et garde les articles qui ont une version dans la langue voulue :
+Les articles d'une catégorie et de ses sous-catégories :
 
 ```bash
-python3 wiki2iramuteq.py --lang br --paralleles fr --avec-source \
-    --categorie "Humanités numériques" --profondeur 2 --sortie ./corpus/hn_br
+python3 wiki2iramuteq.py --lang fr --categorie "Humanités numériques" --profondeur 2 \
+    --contact "votre@courriel" --sortie ./corpus/hn_fr
 ```
 
-Avec `--avec-source`, il écrit aussi le sous-corpus français limité aux mêmes articles. Une variable commune `*id_` permet d'apparier les textes des deux langues dans IRaMuTeQ.
+Avec `--depuis`, la catégorie est donnée dans une langue et cherchée dans une autre grâce aux liens interlangues. Par exemple, `--lang en --depuis fr --categorie "Humanités numériques"` cherche son équivalent anglais. Le script s'arrête avec un message si la catégorie n'existe pas dans la langue visée.
 
 ### Mode « recherche »
 
-Constitue le corpus à partir de termes plutôt que d'une catégorie (recherche plein texte de Wikipédia). Le script garde les articles où les termes apparaissent au moins `--min-occurrences` fois, et ajoute une variable `*terme_` qui indique le terme dominant de chaque article.
+Les articles qui contiennent des termes, par recherche plein texte. Le script ne garde que les articles où les termes apparaissent au moins `--min-occurrences` fois. Il ajoute la variable `*terme_`, qui indique le terme dominant de chaque article.
 
 ```bash
-python3 wiki2iramuteq.py --lang br --recherche "stlenneg,urzhiataer,kenrouedad,genrouedad,niverel" \
-    --min-occurrences 2 --nom numerique --sortie ./corpus/num_br
+python3 wiki2iramuteq.py --lang br --recherche "stlenneg,urzhiataer,kenrouedad,genrouedad" \
+    --min-occurrences 2 --nom numerique --contact "votre@courriel" --sortie ./corpus/num_br
 ```
 
-En breton, pensez aux **mutations** : la recherche ne les gère pas, il faut donner les variantes (`kenrouedad,genrouedad`). Le comptage se fait en début de mot, ce qui inclut les pluriels et dérivés (`urzhiataer` compte aussi `urzhiataerioù`).
+- **En breton, pensez aux mutations.** La recherche ne les gère pas : il faut donner les variantes (`kenrouedad,genrouedad`).
+- **Le comptage se fait en début de mot.** `urzhiataer` compte aussi `urzhiataerioù`.
+- **Pour une langue très présente sur Wikipédia**, limitez le volume avec `--plafond`, qui garde les N résultats les plus pertinents par terme.
 
-### Comparer deux Wikipédia sur un même thème
+### Comparer deux Wikipédia : `--marquer`
 
-Ce protocole répond à la question : quels sujets intéressent les contributeurs de chaque langue ? On lance la même recherche dans chaque langue, avec des termes équivalents, et on marque dans chaque corpus les articles qui existent aussi dans l'autre langue :
-
-```bash
-python3 wiki2iramuteq.py --lang br --recherche "stlenneg,urzhiataer,kenrouedad,genrouedad,niverel,meziant frank" \
-    --marquer fr --nom numerique --sortie ./corpus/num_br
-python3 wiki2iramuteq.py --lang fr --recherche "informatique,ordinateur,internet,numérique,logiciel libre" \
-    --marquer br --plafond 500 --min-occurrences 5 --nom numerique --sortie ./corpus/num_fr
-```
-
-Dans IRaMuTeQ, croisez les classes (méthode Reinert) avec la variable `*equiv_` : une classe composée surtout de `*equiv_fr_non` désigne des sujets propres à la Wikipédia bretonne.
-
-### Refiltrer un corpus par densité : `filtrer_corpus.py`
-
-Un nombre minimal d'occurrences pénalise les articles courts. Deux mentions dans 200 mots, c'est le sujet de l'article ; deux mentions dans 5 000 mots, c'est anecdotique. `filtrer_corpus.py` refiltre un corpus déjà téléchargé selon la densité des termes (occurrences pour 1 000 mots) :
-
-```bash
-# aperçu de plusieurs seuils et liste des articles les moins denses
-python3 filtrer_corpus.py corpus/num_br/wikipedia_br_numerique_metadonnees.csv --apercu
-# filtrage : produit wikipedia_br_numerique_filtre.txt et son CSV
-python3 filtrer_corpus.py corpus/num_br/wikipedia_br_numerique_metadonnees.csv --min-densite 5
-```
-
-Le CSV filtré peut ensuite servir à `--aligner`.
+L'option `--marquer LANGUE` ajoute la variable `*equiv_LANGUE_oui/non` : l'article existe-t-il aussi dans l'autre Wikipédia ? Dans IRaMuTeQ, une classe Reinert composée surtout de `*equiv_fr_non` désigne des sujets propres à la Wikipédia bretonne. Un exemple complet figure dans la [section 4](#4-reproduire-les-corpus-du-dépôt).
 
 ### Mode « alignement »
 
-Ce mode part d'un corpus déjà produit, via son CSV de métadonnées. Il récupère dans une autre langue les articles retenus et produit deux corpus strictement parallèles, avec les mêmes sujets et le même `*id_` dans les deux langues :
+Ce mode part du CSV de métadonnées d'un corpus déjà produit. Il récupère la version des mêmes articles dans une autre langue et produit deux corpus strictement parallèles, avec le même `*id_` dans les deux langues :
 
 ```bash
-python3 wiki2iramuteq.py --lang fr --aligner ./corpus/num_br/wikipedia_br_numerique_metadonnees.csv \
-    --recherche "informatique,ordinateur,internet,numérique,logiciel libre" --sortie ./corpus/num_fr_aligne
+python3 wiki2iramuteq.py --lang fr --aligner ./corpus/num_br/wikipedia_br_numerique_filtre_metadonnees.csv \
+    --recherche "informatique,ordinateur,internet,numérique" --contact "votre@courriel" --sortie ./corpus/num_fr_aligne
 ```
 
 Le dossier de sortie contient :
-- `wikipedia_fr_aligne_sur_br_numerique.txt` : les versions françaises ;
-- `wikipedia_br_numerique_aligne_sur_fr.txt` : le corpus breton restreint aux articles qui ont un équivalent français.
+- `wikipedia_fr_aligne_sur_br_….txt` : les versions françaises ;
+- `wikipedia_br_…_aligne_sur_fr.txt` : le corpus d'origine, restreint aux articles qui ont un équivalent.
 
-`--recherche` est facultatif ici : il ajoute seulement la variable `*terme_` et le décompte des occurrences, sans rien filtrer.
+Ici, `--recherche` est facultatif : il ajoute la variable `*terme_` et le décompte des occurrences, sans rien filtrer.
+
+### Mode « articles parallèles »
+
+Ce mode parcourt une catégorie dans une langue et garde les articles qui existent dans une autre. Il sert quand la catégorie n'existe que dans une langue :
+
+```bash
+python3 wiki2iramuteq.py --lang en --paralleles fr --avec-source \
+    --categorie "Humanités numériques" --contact "votre@courriel" --sortie ./corpus/hn_en
+```
+
+Avec `--avec-source`, le script écrit aussi le sous-corpus dans la langue de départ. Pour le breton et les humanités numériques, ce mode ne trouve aucun article, d'où le choix du mode recherche pour les corpus du dépôt.
+
+## 3. Refiltrer un corpus : `filtrer_corpus.py`
+
+Un nombre minimal d'occurrences pénalise les articles courts. Deux mentions dans 200 mots, c'est le sujet de l'article ; deux mentions dans 5 000 mots, c'est anecdotique. `filtrer_corpus.py` refiltre un corpus déjà téléchargé selon la **densité** des termes (occurrences pour 1 000 mots), puis permet une **révision manuelle** documentée. Il ne retélécharge rien.
+
+```bash
+# 1. aperçu : effet de plusieurs seuils et articles les moins denses
+python3 filtrer_corpus.py corpus/num_br/wikipedia_br_numerique_metadonnees.csv --apercu
+
+# 2. retrouver le titre exact d'un article
+python3 filtrer_corpus.py corpus/num_br/wikipedia_br_numerique_metadonnees.csv --chercher Atlas
+
+# 3. filtrage avec révision manuelle dans les deux sens
+python3 filtrer_corpus.py corpus/num_br/wikipedia_br_numerique_metadonnees.csv --min-densite 2 \
+    --exclure "Portugal;Shrek" --garder "Treiñ e brezhoneg"
+```
+
+Le script produit trois fichiers :
+- `…_filtre.txt` : le corpus filtré ;
+- `…_filtre_metadonnees.csv` : les métadonnées, utilisables ensuite avec `--aligner` ;
+- `…_filtre_criteres.txt` : la trace des seuils, exclusions et conservations appliqués.
+
+## 4. Reproduire les corpus du dépôt
+
+Voici les commandes utilisées le 20 octobre 2026. Wikipédia évoluant, un nouveau tirage donnera des résultats proches, mais pas identiques. Les listes `--exclure` et `--garder` complètes figurent dans les fichiers `*_criteres.txt`.
+
+```bash
+# Humanités numériques (fr)
+python3 wiki2iramuteq.py --lang fr --categorie "Humanités numériques" --profondeur 2 \
+    --contact "votre@courriel" --sortie ./corpus/hn_fr
+
+# Le numérique (br), avec marquage des équivalents français
+python3 wiki2iramuteq.py --lang br \
+    --recherche "stlenneg,urzhiataer,kenrouedad,genrouedad,niverel,meziant frank,meziantoù frank" \
+    --marquer fr --nom numerique --contact "votre@courriel" --sortie ./corpus/num_br
+python3 filtrer_corpus.py corpus/num_br/wikipedia_br_numerique_metadonnees.csv --min-densite 2 \
+    --exclure "…" --garder "…"
+
+# Le numérique (fr), avec marquage des équivalents bretons
+python3 wiki2iramuteq.py --lang fr \
+    --recherche "informatique,ordinateur,internet,numérique,logiciel libre" \
+    --marquer br --plafond 500 --min-occurrences 5 --nom numerique \
+    --contact "votre@courriel" --sortie ./corpus/num_fr
+python3 filtrer_corpus.py corpus/num_fr/wikipedia_fr_numerique_metadonnees.csv --min-densite 2 \
+    --garder "…"
+
+# Paires fr/br
+python3 wiki2iramuteq.py --lang fr \
+    --aligner ./corpus/num_br/wikipedia_br_numerique_filtre_metadonnees.csv \
+    --recherche "informatique,ordinateur,internet,numérique,logiciel libre" \
+    --contact "votre@courriel" --sortie ./corpus/num_fr_aligne
+```
+
+## 5. Options
+
+### `wiki2iramuteq.py`
 
 | Option | Rôle | Défaut |
 |---|---|---|
-| `--lang` | Wikipédia interrogée (`fr`, `br`, `en`…) | `fr` |
-| `--categorie` | Nom de la catégorie, sans préfixe | (ou `--recherche`) |
-| `--recherche` | Termes séparés par des virgules (mode recherche) | — |
-| `--aligner` | CSV de métadonnées d'un corpus existant (mode alignement) | — |
-| `--plafond` | (mode recherche) résultats maximum par terme, les plus pertinents d'abord | `2000` |
-| `--marquer` | Ajoute la variable `*equiv_LANGUE_oui/non` (l'article existe-t-il dans cette autre langue ?) | — |
-| `--min-occurrences` | (mode recherche) occurrences minimales des termes | `2` |
-| `--nom` | (mode recherche) nom court du corpus dans les noms de fichiers | `recherche` |
-| `--depuis` | Langue dans laquelle la catégorie est donnée (recherche de l'équivalent) | — |
-| `--paralleles` | Langue source pour le mode articles parallèles | — |
-| `--avec-source` | (mode parallèle) écrit aussi le sous-corpus de la langue source | — |
+| `--lang` | Langue du corpus à produire (`fr`, `br`, `en`…) | `fr` |
+| `--sortie` | Dossier de sortie, créé s'il n'existe pas | obligatoire |
+| `--contact` | Courriel ou site web transmis à Wikimédia (recommandé) | — |
+| `--categorie` | Mode catégorie : nom de la catégorie, sans préfixe | — |
 | `--profondeur` | Niveaux de sous-catégories parcourus | `2` |
+| `--depuis` | Langue dans laquelle `--categorie` est donnée | — |
+| `--paralleles` | Mode articles parallèles : langue de départ | — |
+| `--avec-source` | Écrit aussi le sous-corpus de la langue de départ | — |
+| `--recherche` | Mode recherche : termes séparés par des virgules | — |
+| `--min-occurrences` | Occurrences minimales des termes (mode recherche) | `2` |
+| `--plafond` | Résultats maximum par terme (mode recherche) | `2000` |
+| `--nom` | Nom court du corpus dans les noms de fichiers (mode recherche) | `recherche` |
+| `--aligner` | Mode alignement : CSV de métadonnées d'un corpus existant | — |
+| `--marquer` | Ajoute `*equiv_LANGUE_oui/non` | — |
 | `--min-mots` | Écarte les articles plus courts | `50` |
-| `--max-articles` | Limite le nombre d'articles (0 = aucune) | `0` |
-| `--sortie` | Dossier de sortie | obligatoire |
-| `--contact` | Courriel ou site web, transmis à Wikimédia dans l'en-tête User-Agent (recommandé) | — |
+| `--max-articles` | Limite le nombre d'articles (0 = aucune limite) | `0` |
 | `--pause` | Secondes minimum entre deux requêtes | `1` |
 
-Le script respecte les limites de l'API Wikimédia. En cas de réponse HTTP 429 (trop de requêtes), il attend le délai indiqué par le serveur, puis ralentit pour la suite. Un corpus de quelques centaines d'articles prend donc quelques minutes.
+### `filtrer_corpus.py`
 
-## Dans IRaMuTeQ
+| Option | Rôle | Défaut |
+|---|---|---|
+| `--apercu` | Affiche l'effet de plusieurs seuils, sans rien écrire | — |
+| `--chercher MOT` | Affiche le titre exact des articles contenant MOT | — |
+| `--min-occurrences` | Occurrences minimales | `2` |
+| `--min-densite` | Occurrences pour 1 000 mots | `0` |
+| `--exclure` | Titres à écarter, séparés par `;` | — |
+| `--garder` | Titres à garder malgré les seuils, séparés par `;` | — |
 
-*Fichier → Ouvrir un corpus*, choisir le fichier `.txt`, encodage **utf-8**, langue **français** (ou la langue bretonne une fois installée).
+## 6. Licences et citation
 
-## Licences
+- **Code** (`*.py`) : GPL-3.0-or-later, voir le fichier `LICENSE`.
+- **Corpus** (dossier `corpus/`) : textes issus de Wikipédia, sous licence [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.fr). Les auteurs sont les contributeurs et contributrices de Wikipédia. Chaque fichier `*_metadonnees.csv` donne l'URL et le numéro de révision de chaque article, ce qui permet de retrouver la version utilisée et son historique. Toute réutilisation doit citer la source et rester sous la même licence.
 
-- Code : GPL-3.0-or-later.
-- Textes extraits : Wikipédia, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.fr). Le CSV de métadonnées conserve l'URL et la révision de chaque article pour l'attribution.
+**Pour citer ce travail :** Pierre Rouarch (Anakeyn), *wiki2iramuteq : corpus IRaMuTeQ à partir de Wikipédia*, 2026, https://github.com/Anakeyn/wiki2iramuteq.
 
-Auteur : Pierre Rouarch — Anakeyn.
+Auteur : Pierre Rouarch, Anakeyn.
