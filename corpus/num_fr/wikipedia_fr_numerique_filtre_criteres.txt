@@ -1,0 +1,6 @@
+Source : wikipedia_fr_numerique_metadonnees.csv
+Occurrences minimales : 2
+Densité minimale : 2.0 ‰
+Exclusions manuelles : aucune
+Conservations forcées : Réseau de neurones artificiels;Apprentissage profond;Financement participatif;Deezer;Reddit;Snapchat;Google (moteur de recherche);Android;Microsoft Office;Blender;Nvidia;UTF-8;PlayStation 3;5G;Glossaire du jeu vidéo;Jeuxvideo.com;Règlement général sur la protection des données;Norman Thavaud;Jeremstar
+Articles gardés : 1232 sur 1266

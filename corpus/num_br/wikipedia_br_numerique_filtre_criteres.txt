@@ -1,0 +1,6 @@
+Source : wikipedia_br_numerique_metadonnees.csv
+Occurrences minimales : 2
+Densité minimale : 2.0 ‰
+Exclusions manuelles : Portugal;Rummad kimiek;Tekla Iconium;Niels Henrik Abel;Esparder gravitadur;Niveradur arabek;Matematik;Liu Cixin;Garmenig Ihuellou;George Byron;Kaier;Starship Troopers;Shrek;Atlas (kartennaoueg);Zaman (kazetenn)
+Conservations forcées : Treiñ e brezhoneg;Listennad kodoù-statud HTTP;Agence Bretagne Presse;Holloueziadur;Kazetennerezh
+Articles gardés : 156 sur 190
