@@ -27,8 +27,8 @@ Ces corpus ont été extraits le 20 octobre 2026. Ils sont prêts à ouvrir dans
 | Humanités numériques (fr) | `corpus/hn_fr/wikipedia_fr_humanites_numeriques.txt` | 45 |
 | Le numérique (fr) | `corpus/num_fr/wikipedia_fr_numerique_filtre.txt` | 1 232 |
 | Le numérique (br) | `corpus/num_br/wikipedia_br_numerique_filtre.txt` | 156 |
-| Paires fr/br, version française | `corpus/num_fr_aligne/wikipedia_fr_aligne_sur_br_numerique_filtre.txt` | 135 |
-| Paires fr/br, version bretonne | `corpus/num_fr_aligne/wikipedia_br_numerique_filtre_aligne_sur_fr.txt` | 135 |
+| Paires fr/br, version française | `corpus/num_fr_aligne/wikipedia_fr_aligne_sur_br_numerique_filtre.txt` | 137 |
+| Paires fr/br, version bretonne | `corpus/num_fr_aligne/wikipedia_br_numerique_filtre_aligne_sur_fr.txt` | 137 |
 
 **Pour récupérer un corpus :** sur GitHub, cliquez sur le fichier, puis sur le bouton de téléchargement (*Download raw file*). Vous pouvez aussi récupérer tout le dépôt avec le bouton vert **Code → Download ZIP**.
 
@@ -36,7 +36,7 @@ Ces corpus ont été extraits le 20 octobre 2026. Ils sont prêts à ouvrir dans
 
 **Corpus bretons :** IRaMuTeQ ne propose pas encore de dictionnaire breton. En attendant, ouvrez-les avec la langue « français » et décochez la lemmatisation dans les paramètres de chaque analyse : les analyses portent alors sur les formes du texte.
 
-Le fichier [`corpus/LISEZMOI.md`](corpus/LISEZMOI.md) décrit pour chaque corpus la méthode de constitution, les variables étoilées, les seuils et les choix manuels. Les fichiers `*_criteres.txt` en gardent la trace.
+Pour chaque corpus filtré, le fichier `*_criteres.txt` garde la trace des seuils et des choix manuels. La [section 4](#4-reproduire-les-corpus-du-dépôt) donne les commandes utilisées.
 
 ## 2. Créer ses propres corpus
 
@@ -212,3 +212,7 @@ python3 wiki2iramuteq.py --lang fr \
 **Pour citer ce travail :** Pierre Rouarch (Anakeyn), *wiki2iramuteq : corpus IRaMuTeQ à partir de Wikipédia*, 2026, https://github.com/Anakeyn/wiki2iramuteq.
 
 Auteur : Pierre Rouarch, Anakeyn.
+
+## Pour en savoir plus
+
+L'article de blog qui présente l'outil pas à pas, avec le code commenté : [Créer des corpus IRaMuTeQ à partir de Wikipédia avec Python : wiki2iramuteq](https://www.anakeyn.com/2026/10/21/creer-des-corpus-iramuteq-a-partir-de-wikipedia-avec-python-wiki2iramuteq/).
